@@ -17,9 +17,9 @@ def EK(list, k):
     clauses += generate_clauses(list, k, R)
     # print(clauses)
     AMK_clauses = generate_clause_8(list, k, R)
-    print("AMK: ", AMK_clauses)
+    # print("AMK: ", AMK_clauses)
     ALK_clauses = generate_clause_7(list, k, R)
-    print("ALK: ", ALK_clauses)
+    # print("ALK: ", ALK_clauses)
     clauses += AMK_clauses
     clauses += ALK_clauses
     return clauses
@@ -119,7 +119,7 @@ def generate_seq_clauses(list):
             current += 1
     return clauses
 
-print(EK([1, 2, 3, 4, 5], 1))
+# print(EK([1, 2, 3, 4, 5], 1))
 # print(generate_seq_clauses([1, 2, 3, 4, 5]))
 
 def main():
