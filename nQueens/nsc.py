@@ -1,6 +1,6 @@
 from pysat.solvers import Glucose3
 
-N = 5
+N = 4
 size = N**2
 current = size + 1
 
@@ -13,26 +13,30 @@ def EK(list, k):
     R = [[current + i*k + j for j in range(k)] for i in range(n)]
     current += N*k
 
-    clauses = generate_clauses(list, k, R)
+    clauses = []
+    clauses += generate_clauses(list, k, R)
     # print(clauses)
-    AMK_clauses = AMK(list, k, R)
-    ALK_clauses = ALK(list, k, R)
+    AMK_clauses = generate_clause_8(list, k, R)
+    print("AMK: ", AMK_clauses)
+    ALK_clauses = generate_clause_7(list, k, R)
+    print("ALK: ", ALK_clauses)
     clauses += AMK_clauses
     clauses += ALK_clauses
     return clauses
 
 
 def generate_clauses(list, k, R):
-    global current
     clauses = []
     n = len(list)
 
     # print("additional_var_board: ", additional_var_board)
     # upto n-1 which mean from 0 to n-2
+    # formula (1)
     for i in range(n - 1):
         clause = [-list[i], R[i][0]]
         clauses.append(clause)
 
+    # formula (2), (4)
     for i in range(1, n - 1):
         for j in range(min(i-1, k-1) + 1):
             clause = [-R[i-1][j], R[i][j]]
@@ -40,6 +44,7 @@ def generate_clauses(list, k, R):
             clause = [list[i], R[i-1][j], -R[i][j]]
             clauses.append(clause)
         
+    # formula (3), (6)
     for i in range(1, n-1):
         for j in range(1, min(i, k-1) + 1):
             clause = [-list[i], -R[i-1][j-1], R[i][j]]
@@ -47,6 +52,7 @@ def generate_clauses(list, k, R):
             clause = [R[i-1][j-1], -R[i][j]]
             clauses.append(clause)
 
+    # formula (5)
     for i in range(k):
         clause = [list[i], -R[i][i]]
         clauses.append(clause)
@@ -54,8 +60,32 @@ def generate_clauses(list, k, R):
     # print("clauses: ", clauses)
     return clauses
 
+def ALK(list, k):
+    global current
+    n = len(list)
+    R = [[current + i*k + j for j in range(k)] for i in range(n)]
+    current += N*k
 
-def AMK(list, k, R):
+    clauses = []
+    clauses += generate_clauses(list, k, R)
+    ALK_clauses = generate_clause_7(list, k, R)
+    clauses += ALK_clauses
+    return clauses
+
+def AMK(list, k):
+    global current
+    n = len(list)
+    R = [[current + i*k + j for j in range(k)] for i in range(n)]
+    current += N*k
+
+    clauses = []
+    clauses += generate_clauses(list, k, R)
+    AMK_clauses = generate_clause_8(list, k, R)
+    clauses += AMK_clauses
+    return clauses
+
+
+def generate_clause_8(list, k, R):
     clauses = []
     n = len(list)
     for i in range(k, n):
@@ -63,12 +93,34 @@ def AMK(list, k, R):
         clauses.append(clause)
     return clauses
 
-def ALK(list, k, R):
+def generate_clause_7(list, k, R):
     clauses = []
+    if k == 1:
+        return clauses
     n = len(list)
     clauses.append([R[n-2][k-1], list[n-1]])
     clauses.append([R[n-2][k-1], R[n-2][k-2]])
     return clauses
+
+def generate_seq_clauses(list):
+    global current
+    clauses = []
+    for idx, x in enumerate(list):
+        if idx == 0:
+            clauses.append([-x, current])
+            current += 1
+        elif idx == len(list) - 1:
+            clauses.append([-x, -current+1])
+            current += 1
+        else:
+            clauses.append([-x, current])
+            clauses.append([-current+1, current])
+            clauses.append([-x, -current+1])
+            current += 1
+    return clauses
+
+print(EK([1, 2, 3, 4, 5], 1))
+# print(generate_seq_clauses([1, 2, 3, 4, 5]))
 
 def main():
     with Glucose3() as g: 
@@ -117,12 +169,12 @@ def main():
         filtered_k_minus = {k:v for k, v in k_minus.items() if len(v) > 1}
 
         for diag in filtered_k_plus.values():
-            seq_clauses = EK(diag, 1)
+            seq_clauses = AMK(diag, 1)
             for clause in seq_clauses:
                 g.add_clause(clause)
         
         for diag in filtered_k_minus.values():
-            seq_clauses = EK(diag, 1)
+            seq_clauses = AMK(diag, 1)
             for clause in seq_clauses:
                 g.add_clause(clause)
 
