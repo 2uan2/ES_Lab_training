@@ -1,58 +1,58 @@
 from pysat.solvers import Glucose3
 
-N = 4
+N = 20
 size = N**2
 current = size + 1
 
 # exactly k is a combination of clause 1 to 6 and clause 7 and 8
 def EK(list, k):
     global current
-    n = len(list)
-    R = [[current + i*k + j for j in range(k)] for i in range(n)]
-    current += N*k
+    list = [0] + list
+    n = len(list) - 1
+    R = generate_R(k, n, current)
     print(R)
+    current += N*k
 
     clauses = []
-    clauses += generate_clauses(list, k, R)
+    clauses += generate_clauses(list, k, R, n)
     # print(clauses)
-    AMK_clauses = generate_clause_8(list, k, R)
+    AMK_clauses = generate_clause_8(list, k, R, n)
     # print("AMK: ", AMK_clauses)
-    ALK_clauses = generate_clause_7(list, k, R)
+    ALK_clauses = generate_clause_7(list, k, R, n)
     # print("ALK: ", ALK_clauses)
     clauses += AMK_clauses
     clauses += ALK_clauses
     return clauses
 
 # generates clauses 1 to 6
-def generate_clauses(list, k, R):
+def generate_clauses(list, k, R, n):
     clauses = []
-    n = len(list)
+    # n = len(list) - 1
 
-    # print("additional_var_board: ", additional_var_board)
-    # upto n-1 which mean from 0 to n-2
     # formula (1)
-    for i in range(n - 1):
-        clause = [-list[i], R[i][0]]
+    for i in range(1, n):
+        clause = [-list[i], R[i][1]]
         clauses.append(clause)
 
     # formula (2), (4)
-    for i in range(1, n - 1):
-        for j in range(min(i-1, k-1) + 1):
+    for i in range(2, n):
+        for j in range(1, min(i-1, k) + 1):
             clause = [-R[i-1][j], R[i][j]]
             clauses.append(clause)
             clause = [list[i], R[i-1][j], -R[i][j]]
             clauses.append(clause)
+    # print(clause)
         
     # formula (3), (6)
-    for i in range(1, n-1):
-        for j in range(1, min(i, k-1) + 1):
+    for i in range(2, n):
+        for j in range(2, min(i, k) + 1):
             clause = [-list[i], -R[i-1][j-1], R[i][j]]
             clauses.append(clause)
             clause = [R[i-1][j-1], -R[i][j]]
             clauses.append(clause)
 
     # formula (5)
-    for i in range(k):
+    for i in range(1, k+1):
         clause = [list[i], -R[i][i]]
         clauses.append(clause)
 
@@ -62,66 +62,54 @@ def generate_clauses(list, k, R):
 # clause 1 to 6 and clause 7
 def ALK(list, k):
     global current
-    n = len(list)
-    R = [[current + i*k + j for j in range(k)] for i in range(n)]
+    list = [0] + list
+    n = len(list) - 1
+    R = generate_R(k, n, current)
     current += N*k
 
     clauses = []
-    clauses += generate_clauses(list, k, R)
-    ALK_clauses = generate_clause_7(list, k, R)
+    clauses += generate_clauses(list, k, R, n)
+    ALK_clauses = generate_clause_7(list, k, R, n)
     clauses += ALK_clauses
     return clauses
 
 # clause 1 to 6 and clause 8
 def AMK(list, k):
     global current
-    n = len(list)
-    R = [[current + i*k + j for j in range(k)] for i in range(n)]
+    list = [0] + list
+    n = len(list) - 1
+    R = generate_R(k, n, current)
     current += N*k
 
     clauses = []
-    clauses += generate_clauses(list, k, R)
-    AMK_clauses = generate_clause_8(list, k, R)
+    clauses += generate_clauses(list, k, R, n)
+    AMK_clauses = generate_clause_8(list, k, R, n)
     clauses += AMK_clauses
     return clauses
 
-def generate_clause_8(list, k, R):
+def generate_R(k, n, current):
+    R = [[current + i*k + j for j in range(k)] for i in range(n)]
+    # add padding 0s to the R matrix for easier 1-indexing
+    R = [[0 for _ in range(k)]] + R
+    R = [[0] + i for i in R]
+    return R
+
+def generate_clause_8(list, k, R, n):
     clauses = []
-    n = len(list)
-    for i in range(k, n):
-        clause = [-list[i], -R[i-1][k-1]] # might have a problem here idk lol
+    for i in range(k+1, n+1):
+        clause = [-list[i], -R[i-1][k]]
         clauses.append(clause)
     return clauses
 
-def generate_clause_7(list, k, R):
+def generate_clause_7(list, k, R, n):
     clauses = []
     if k == 1:
         return clauses
-    n = len(list)
-    clauses.append([R[n-2][k-1], list[n-1]])
-    clauses.append([R[n-2][k-1], R[n-2][k-2]])
+    clauses.append([R[n-1][k], list[n]])
+    clauses.append([R[n-1][k], R[n-1][k-1]])
     return clauses
 
-# normal sequential counter for at most one
-def generate_seq_clauses(list):
-    global current
-    clauses = []
-    for idx, x in enumerate(list):
-        if idx == 0:
-            clauses.append([-x, current])
-            current += 1
-        elif idx == len(list) - 1:
-            clauses.append([-x, -current+1])
-            current += 1
-        else:
-            clauses.append([-x, current])
-            clauses.append([-current+1, current])
-            clauses.append([-x, -current+1])
-            current += 1
-    return clauses
-
-# print(EK([1, 2, 3, 4, 5], 1))
-# print(generate_seq_clauses([1, 2, 3, 4, 5]))
+# print(EK([1, 2, 3, 4, 5], 2))
 
 def main():
     with Glucose3() as g: 
