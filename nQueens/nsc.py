@@ -4,14 +4,13 @@ N = 4
 size = N**2
 current = size + 1
 
-# def location_to_index_offset(i, j, k):
-#     return (i-1)*k + (j-1)
-
+# exactly k is a combination of clause 1 to 6 and clause 7 and 8
 def EK(list, k):
     global current
     n = len(list)
     R = [[current + i*k + j for j in range(k)] for i in range(n)]
     current += N*k
+    print(R)
 
     clauses = []
     clauses += generate_clauses(list, k, R)
@@ -24,7 +23,7 @@ def EK(list, k):
     clauses += ALK_clauses
     return clauses
 
-
+# generates clauses 1 to 6
 def generate_clauses(list, k, R):
     clauses = []
     n = len(list)
@@ -60,6 +59,7 @@ def generate_clauses(list, k, R):
     # print("clauses: ", clauses)
     return clauses
 
+# clause 1 to 6 and clause 7
 def ALK(list, k):
     global current
     n = len(list)
@@ -72,6 +72,7 @@ def ALK(list, k):
     clauses += ALK_clauses
     return clauses
 
+# clause 1 to 6 and clause 8
 def AMK(list, k):
     global current
     n = len(list)
@@ -83,7 +84,6 @@ def AMK(list, k):
     AMK_clauses = generate_clause_8(list, k, R)
     clauses += AMK_clauses
     return clauses
-
 
 def generate_clause_8(list, k, R):
     clauses = []
@@ -102,6 +102,7 @@ def generate_clause_7(list, k, R):
     clauses.append([R[n-2][k-1], R[n-2][k-2]])
     return clauses
 
+# normal sequential counter for at most one
 def generate_seq_clauses(list):
     global current
     clauses = []
@@ -124,7 +125,9 @@ def generate_seq_clauses(list):
 
 def main():
     with Glucose3() as g: 
+        # g.add_clause([2])
 
+        # get all the rows that needs exactly one applied on
         rows = []
         for y in range(N):
             row = []
@@ -132,6 +135,7 @@ def main():
                 row.append(y*N + x + 1)
             rows.append(row)
 
+        # apply exactly one on each row
         for row in rows:
             seq_clauses = EK(row, 1)
             for clause in seq_clauses:
@@ -150,6 +154,7 @@ def main():
             for clause in seq_clauses:
                 g.add_clause(clause)
 
+        # dictionary of all the diagonals
         k_plus = {}
         k_minus = {}
         
@@ -165,9 +170,11 @@ def main():
                 else:
                     k_plus[y+x].append(val)
 
+        # filter out the diagonals that have less than 2 elements
         filtered_k_plus = {k:v for k, v in k_plus.items() if len(v) > 1}
         filtered_k_minus = {k:v for k, v in k_minus.items() if len(v) > 1}
 
+        # apply at most one on the diagonals
         for diag in filtered_k_plus.values():
             seq_clauses = AMK(diag, 1)
             for clause in seq_clauses:
@@ -178,7 +185,6 @@ def main():
             for clause in seq_clauses:
                 g.add_clause(clause)
 
-        # print("clauses are: ", clauses)
         if g.solve():
             print("satisfiable")
             print("Model: ", g.get_model()[:size])
