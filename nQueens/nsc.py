@@ -1,6 +1,6 @@
 from pysat.solvers import Glucose3
 
-N = 20
+N = 8
 size = N**2
 current = size + 1
 
@@ -11,7 +11,7 @@ def EK(list, k):
     n = len(list) - 1
     R = generate_R(k, n, current)
     print(R)
-    current += N*k
+    current += n*k
 
     clauses = []
     clauses += generate_clauses(list, k, R, n)
@@ -65,7 +65,7 @@ def ALK(list, k):
     list = [0] + list
     n = len(list) - 1
     R = generate_R(k, n, current)
-    current += N*k
+    current += n*k
 
     clauses = []
     clauses += generate_clauses(list, k, R, n)
@@ -79,7 +79,7 @@ def AMK(list, k):
     list = [0] + list
     n = len(list) - 1
     R = generate_R(k, n, current)
-    current += N*k
+    current += n*k
 
     clauses = []
     clauses += generate_clauses(list, k, R, n)
